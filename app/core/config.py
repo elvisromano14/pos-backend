@@ -22,11 +22,24 @@ class Settings(BaseSettings):
     @property
     def sqlserver_url(self) -> str:
         driver = self.sqlserver_driver.replace(" ", "+")
-        return (
-            f"mssql+pyodbc://{self.sqlserver_user}:{self.sqlserver_password}"
-            f"@{self.sqlserver_host}:{self.sqlserver_port}/{self.sqlserver_database}"
-            f"?driver={driver}&TrustServerCertificate=yes"
-        )
+        
+        host_part = self.sqlserver_host
+        if self.sqlserver_port and "\\" not in self.sqlserver_host:
+            # Solo usar puerto si no es una instancia con nombre como SERVER\SQLEXPRESS
+            host_part = f"{self.sqlserver_host}:{self.sqlserver_port}"
+            
+        if self.sqlserver_user and self.sqlserver_password:
+            return (
+                f"mssql+pyodbc://{self.sqlserver_user}:{self.sqlserver_password}"
+                f"@{host_part}/{self.sqlserver_database}"
+                f"?driver={driver}&TrustServerCertificate=yes"
+            )
+        else:
+            # Autenticación de Windows
+            return (
+                f"mssql+pyodbc://@{host_part}/{self.sqlserver_database}"
+                f"?driver={driver}&Trusted_Connection=yes&TrustServerCertificate=yes"
+            )
 
 
 @lru_cache

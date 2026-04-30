@@ -12,6 +12,7 @@ def get_current_user(
     try:
         payload = decode_access_token(credentials.credentials)
     except ValueError as exc:
+        print("JWT Decode Error:", exc)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=str(exc),
