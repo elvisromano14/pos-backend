@@ -32,9 +32,17 @@ def update_categoria(categoria_id: int, data: CategoriaUpdate, current_user: dic
         raise HTTPException(status_code=404, detail="Categoría no encontrada")
     return categoria
 
+from sqlalchemy.exc import IntegrityError
+
 @router.delete("/{categoria_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_categoria(categoria_id: int, current_user: dict = Depends(get_current_user)):
     tenant_schema = current_user["tenant_schema"]
-    success = categoria_service.delete_categoria(tenant_schema, categoria_id)
-    if not success:
-        raise HTTPException(status_code=404, detail="Categoría no encontrada")
+    try:
+        success = categoria_service.delete_categoria(tenant_schema, categoria_id)
+        if not success:
+            raise HTTPException(status_code=404, detail="Categoría no encontrada")
+    except IntegrityError:
+        raise HTTPException(
+            status_code=400, 
+            detail="No se puede eliminar la categoría porque está siendo utilizada por uno o más artículos."
+        )

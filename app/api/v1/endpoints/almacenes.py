@@ -32,9 +32,17 @@ def update_almacen(almacen_id: int, data: AlmacenUpdate, current_user: dict = De
         raise HTTPException(status_code=404, detail="Almacén no encontrado")
     return almacen
 
+from sqlalchemy.exc import IntegrityError
+
 @router.delete("/{almacen_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_almacen(almacen_id: int, current_user: dict = Depends(get_current_user)):
     tenant_schema = current_user["tenant_schema"]
-    success = almacen_service.delete_almacen(tenant_schema, almacen_id)
-    if not success:
-        raise HTTPException(status_code=404, detail="Almacén no encontrado")
+    try:
+        success = almacen_service.delete_almacen(tenant_schema, almacen_id)
+        if not success:
+            raise HTTPException(status_code=404, detail="Almacén no encontrado")
+    except IntegrityError:
+        raise HTTPException(
+            status_code=400, 
+            detail="No se puede eliminar el almacén porque tiene registros de inventario u otros datos asociados."
+        )
