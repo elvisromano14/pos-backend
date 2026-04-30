@@ -10,3 +10,10 @@ class LoginRequest(BaseModel):
 class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
+
+
+class CurrentUserResponse(BaseModel):
+    username: str
+    tenant_id: int
+    tenant_schema: str
+    roles: list[str]
